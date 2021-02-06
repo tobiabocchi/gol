@@ -23,18 +23,18 @@ typedef struct {  // Arguments for each slave thread:
   int  id;        // Thread id
 } ThreadArgs;
 
-void syncMS(bool master) {
+void syncMS(int id) {
   /*
    * Synchronize master and slaves.
-   * bool master: whether the master or a slave has control
+   * int id: thread's id of caller, -1 is master
    */
   pthread_mutex_lock(&MTX);
-  if (master) {  // Master's critical section
+  if (id == -1) {  // Master's critical section
     if (READY_T == TOT_THREADS) {  // If all slaves are ready unleash them
       READY_T = 0;
       pthread_cond_broadcast(&MOSI_CV);
     }
-    while (READY_T != TOT_THREADS) {// Wait until everyone is ready
+    while (READY_T != TOT_THREADS) {  // Wait until everyone is ready
       pthread_cond_wait(&MISO_CV, &MTX);
     }
   }
@@ -69,7 +69,6 @@ void logErr2(char *str, int err) {
 void show() {
   /*
    * Print the universe to standard output using ANSI escape codes.
-   * int s: universe's size
    */
   size_t pts = 0;     // Game points
   printf("\033[H");   // Move the cursor to the top left corner of the screen
@@ -175,59 +174,28 @@ void *slave(void *a) {
   if (args->id == TOT_THREADS - 1)
     x_to = UNIV_SIZE;
   while (true) {
-    syncMS(false); // Sync
+    syncMS(args->id); // Sync
     tick(x_from, x_to, 0, UNIV_SIZE);
-  }
-}
-
-void setup(int s, int n_t, pthread_t *t_arr, ThreadArgs *a_arr, char **UNIV) {
-  /*
-   * Set up global variables and everything needed for the game
-   * int s: universe's size
-   * int n_t: the total number of slaves
-   * pthread_t *t_arr: array of threads
-   * ThreadArgs *a_arr: array of structs with thread's args
-   * char** o_univ: 2D matrix holding universe
-   */
-  // Initialize mutex and condition variable objects
-  if(pthread_mutex_init(&MTX, NULL) != 0)
-    logErr1("Error: unable to initialize mutex");
-  if(pthread_cond_init (&MOSI_CV, NULL) != 0)
-    logErr1("Error: unable to initialize condition variable");
-  if(pthread_cond_init (&MISO_CV, NULL) != 0)
-    logErr1("Error: unable to initialize condition variable");
-
-  ThreadArgs *a_ptr = a_arr;
-  int err;
-  for (int t_id = 0; t_id < n_t; t_id++) {
-    // Init args and spawn thread
-    a_ptr->id   = t_id;
-    if(err = pthread_create(&t_arr[t_id], NULL, slave, (void *)a_ptr))
-      logErr2("Error: unable to create thread.\n", err);
-    a_ptr++;
   }
 }
 
 void gol() {
   /*
    * Set everything up and start game loop
-   * int s: universe's size
-   * int n_t: the total number of slaves
    */
 
   pthread_t  t_arr[TOT_THREADS];
   ThreadArgs a_arr[TOT_THREADS];
 
+  // Initialize universe
   initUniv();
 
-  // Set everything up
-  // setup(s, n_t, t_arr, a_arr, univ);
-
+  // Initialize threads
   ThreadArgs *a_ptr = a_arr;
   int err;
   for (int t_id = 0; t_id < TOT_THREADS; t_id++) {
     // Init args and spawn thread
-    a_ptr->id   = t_id;
+    a_ptr->id = t_id;
     if(err = pthread_create(&t_arr[t_id], NULL, slave, (void *)a_ptr))
       logErr2("Error: unable to create thread.\n", err);
     a_ptr++;
@@ -237,11 +205,8 @@ void gol() {
   while(true) {
     usleep(50000);
     show();
-    syncMS(true); // Sync
+    syncMS(-1); // Sync
   }
-
-  pthread_exit(NULL);
-  exit(EXIT_SUCCESS);
 }
 
 int main(int c, char **v) {
