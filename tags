@@ -1,0 +1,43 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_OUTPUT_EXCMD	mixed	/number, pattern, mixed, or combineV2/
+!_TAG_OUTPUT_FILESEP	slash	/slash or backslash/
+!_TAG_OUTPUT_MODE	u-ctags	/u-ctags or e-ctags/
+!_TAG_PATTERN_LENGTH_LIMIT	96	/0 for no limit/
+!_TAG_PROC_CWD	/home/tobiabocchi/Projects/gol/	//
+!_TAG_PROGRAM_AUTHOR	Universal Ctags Team	//
+!_TAG_PROGRAM_NAME	Universal Ctags	/Derived from Exuberant Ctags/
+!_TAG_PROGRAM_URL	https://ctags.io/	/official site/
+!_TAG_PROGRAM_VERSION	5.9.0	/p5.9.20210110.0/
+__anon0f858bd80108	gol.c	/^typedef struct {  \/\/ Arguments for each slave thread:$/;"	s	file:
+build	Makefile	/^build:$/;"	t
+clean	Makefile	/^clean:$/;"	t
+criticalSection	gol.c	/^void criticalSection(bool master, int *n_t) {$/;"	f	typeref:typename:void
+friends	gol.c	/^int friends(int s, char univ[][s], int c, int r) {$/;"	f	typeref:typename:int
+friends	sequential_gol.c	/^int friends(int w, int h, char univ[][w], int c, int r) {$/;"	f	typeref:typename:int
+gol	gol.c	/^void gol(int s, int n_t) {$/;"	f	typeref:typename:void
+gol	sequential_gol.c	/^void gol(int w, int h) {$/;"	f	typeref:typename:void
+hi	gol.c	/^void *hi(void *a) {$/;"	f	typeref:typename:void *
+id	gol.c	/^  int  id;        \/\/ Thread id$/;"	m	struct:__anon0f858bd80108	typeref:typename:int	file:
+initUniv	gol.c	/^void initUniv(int s, char** univ) {$/;"	f	typeref:typename:void
+initUniv	sequential_gol.c	/^void initUniv(int w, int h, char univ[][w]) {$/;"	f	typeref:typename:void
+logErr1	gol.c	/^void logErr1(char *str) {$/;"	f	typeref:typename:void
+logErr1	sequential_gol.c	/^void logErr1(char *str) {$/;"	f	typeref:typename:void
+logErr2	gol.c	/^void logErr2(char *str, int err) {$/;"	f	typeref:typename:void
+logErr2	sequential_gol.c	/^void logErr2(char *str, int err) {$/;"	f	typeref:typename:void
+main	gol.c	/^int main(int c, char **v) {$/;"	f	typeref:typename:int
+main	sequential_gol.c	/^int main(int c, char **v) {$/;"	f	typeref:typename:int
+miso_cv	gol.c	/^pthread_cond_t  miso_cv;      \/\/ Condition variable master->slave$/;"	v	typeref:typename:pthread_cond_t
+mosi_cv	gol.c	/^pthread_cond_t  mosi_cv;      \/\/ Condition variable slave->master$/;"	v	typeref:typename:pthread_cond_t
+n_ready	gol.c	/^int n_ready = 0;              \/\/ Number of slave threads ready$/;"	v	typeref:typename:int
+n_ready_mtx	gol.c	/^pthread_mutex_t n_ready_mtx;  \/\/ Mutex for n_ready's critical sections$/;"	v	typeref:typename:pthread_mutex_t
+n_t	gol.c	/^  int  *n_t;      \/\/ Total number of threads$/;"	m	struct:__anon0f858bd80108	typeref:typename:int *	file:
+s	gol.c	/^  int  *s;        \/\/ Universe's size$/;"	m	struct:__anon0f858bd80108	typeref:typename:int *	file:
+show	gol.c	/^void show(int s, char univ[][s]) {$/;"	f	typeref:typename:void
+show	sequential_gol.c	/^void show(int w, int h, char univ[][w]) {$/;"	f	typeref:typename:void
+t_args	gol.c	/^} t_args;$/;"	t	typeref:struct:__anon0f858bd80108	file:
+threads_running	gol.c	/^bool threads_running = false;$/;"	v	typeref:typename:bool
+tick	gol.c	/^void tick(int s, char o_univ[][s]) {$/;"	f	typeref:typename:void
+tick	sequential_gol.c	/^void tick(int w, int h, char o_univ[][w]) {$/;"	f	typeref:typename:void
+u	sequential_gol.c	/^typedef unsigned u;$/;"	t	typeref:typename:unsigned	file:
+univ	gol.c	/^  char **univ;    \/\/ Universe$/;"	m	struct:__anon0f858bd80108	typeref:typename:char **	file:
