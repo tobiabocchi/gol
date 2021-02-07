@@ -10,18 +10,30 @@
 #include <pthread.h>
 
 /*** Global Variables ***/
-pthread_mutex_t MTX;            // Mutex for n_ready's critical sections
-pthread_cond_t  MOSI_CV;        // Condition variable master->slave
-pthread_cond_t  MISO_CV;        // Condition variable slave->master
-int READY_T = 0;                // Number of slave threads ready
-int UNIV_SIZE;                  // Universe's size
-int TOT_THREADS = 4;            // Number of threads, default to 4
-char UNIV[1000][1000];  // 2D Matrix representing the universe
+pthread_mutex_t MTX;         // Mutex for n_ready's critical sections
+pthread_cond_t  MOSI_CV;     // Condition variable master->slave
+pthread_cond_t  MISO_CV;     // Condition variable slave->master
+int UNIV_SIZE;               // Universe's size
+int TOT_THREADS = 1;         // Number of threads, default to 4
+bool* T_STATES;              // Array containing threads' status
+char UNIV[1000][1000];       // 2D Matrix representing the universe
+char TEMP_UNIV[1000][1000];  // Temporary universe for holding next frame
 /************************/
 
 typedef struct {  // Arguments for each slave thread:
   int  id;        // Thread id
 } ThreadArgs;
+
+int nReady() {
+  /*
+   * Return number of threads ready.
+   */
+  int ready_t = 0;  // Number of ready threads
+  for (int t = 0; t < TOT_THREADS; t++)
+    if(T_STATES[t])
+      ready_t++;
+  return ready_t;
+}
 
 void syncMS(int id) {
   /*
@@ -29,20 +41,31 @@ void syncMS(int id) {
    * int id: thread's id of caller, -1 is master
    */
   pthread_mutex_lock(&MTX);
+  int ready_t = nReady();
   if (id == -1) {  // Master's critical section
-    if (READY_T == TOT_THREADS) {  // If all slaves are ready unleash them
-      READY_T = 0;
+    if (ready_t == TOT_THREADS) {  // If all slaves are ready unleash them
+      ready_t = 0;
+      for (int t = 0; t < TOT_THREADS; t++)
+        T_STATES[t] = false;
       pthread_cond_broadcast(&MOSI_CV);
     }
-    while (READY_T != TOT_THREADS) {  // Wait until everyone is ready
+    while (ready_t != TOT_THREADS) {  // Wait until everyone is ready
       pthread_cond_wait(&MISO_CV, &MTX);
+      ready_t = nReady();  // Update number of ready threads
     }
   }
   else {  // Slave's critical section
-    READY_T++;  // Mark self as ready
-    if (READY_T == TOT_THREADS)  // When everyone is ready signal master
+    T_STATES[id] = true;  // Slave just finished computing
+    ready_t = nReady();
+    if (ready_t == TOT_THREADS) {  // When everyone is ready signal master
       pthread_cond_signal(&MISO_CV);
-    pthread_cond_wait(&MOSI_CV, &MTX);  // Wait to be unleashed
+      // Evolve old universe
+      for (int y = 0; y < UNIV_SIZE; y++)
+        for (int x = 0; x < UNIV_SIZE; x++)
+          UNIV[y][x] = TEMP_UNIV[y][x];
+    }
+    while(T_STATES[id])  // Until unleashed
+      pthread_cond_wait(&MOSI_CV, &MTX);  // Wait to be unleashed
   }
   pthread_mutex_unlock(&MTX);
 }
@@ -101,9 +124,10 @@ int friends(int c, int r) {
    */
   int n_f = 0;  // Initial number of friends
   for (int y = r - 1; y <= r + 1; y++)
-    for (int x = c - 1; x <= c + 1; x++)
+    for (int x = c - 1; x <= c + 1; x++) {
       if ((UNIV[(y + UNIV_SIZE) % UNIV_SIZE][(x + UNIV_SIZE) % UNIV_SIZE]) == '1')
         n_f++;  // Found neighbour on adjacent cell
+    }
   return UNIV[r][c] == '1' ? n_f - 1 : n_f;  // Don't count self as friend
 }
 
@@ -115,17 +139,14 @@ void tick(int x_from, int x_to, int y_from, int y_to) {
    * int y_from: y index to start from
    * int y_to: y index to stop at
    */
-  char n_univ[y_to - y_from][x_to - x_from];  // Store next state here
   for (int y = y_from; y < y_to; y++)
     for (int x = x_from; x < x_to; x++) {
       int n_f = friends(x, y);
+      //if(n_f > 0)
+      //  printf("%i, %i has %i friends\n", x, y, n_f);
       // Update cell's status in the new universe
-      n_univ[y][x] = n_f == 3 || (n_f == 2 && UNIV[y][x] == '1') ? '1' : '0';
+      TEMP_UNIV[y][x] = n_f == 3 || (n_f == 2 && UNIV[y][x] == '1') ? '1' : '0';
     }
-  // Evolve old universe
-  for (int y = y_from; y < y_to; y++)
-    for (int x = x_from; x < x_to; x++)
-      UNIV[y][x] = n_univ[y][x];
 }
 
 void initUniv() {
@@ -150,6 +171,7 @@ void initUniv() {
     if (n_l < 1)
       logErr2("Error: too many lines in 'universe.txt'.\n", EIO);
     strncpy(UNIV[UNIV_SIZE - n_l], l, UNIV_SIZE);
+    strncpy(TEMP_UNIV[UNIV_SIZE - n_l], l, UNIV_SIZE);
     n_l--;  // Decrement lines to read
   }
 
@@ -176,6 +198,7 @@ void *slave(void *a) {
   while (true) {
     syncMS(args->id); // Sync
     tick(x_from, x_to, 0, UNIV_SIZE);
+    //printf("Thread %i renders from %i to %i\n", args->id, x_from, x_to);
   }
 }
 
@@ -196,14 +219,16 @@ void gol() {
   for (int t_id = 0; t_id < TOT_THREADS; t_id++) {
     // Init args and spawn thread
     a_ptr->id = t_id;
+    T_STATES[t_id] = true;
     if(err = pthread_create(&t_arr[t_id], NULL, slave, (void *)a_ptr))
       logErr2("Error: unable to create thread.\n", err);
     a_ptr++;
   }
 
+  char temp[5];
   // Start game loop
   while(true) {
-    usleep(50000);
+    usleep(8000);
     show();
     syncMS(-1); // Sync
   }
@@ -239,6 +264,7 @@ int main(int c, char **v) {
 
   UNIV_SIZE = s;
   TOT_THREADS = n_t;
+  T_STATES = malloc(sizeof(bool)*TOT_THREADS);
 
   // Start the game
   gol();
