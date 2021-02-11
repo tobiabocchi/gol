@@ -97,7 +97,7 @@ void show() {
   printf("\033[H");   // Move the cursor to the top left corner of the screen
   for (int y = 0; y < UNIV_SIZE; y++) {
     for (int x = 0; x < UNIV_SIZE; x++) {
-      switch (UNIV[y][x]) { // TODO: fix pointer handling here
+      switch (UNIV[y][x]) {
         case '0':  // Dead cell
           printf("  ");
           break;
