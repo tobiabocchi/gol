@@ -30,7 +30,7 @@ int nReady() {
    */
   int ready_t = 0;  // Number of ready threads
   for (int t = 0; t < TOT_THREADS; t++)
-    if(T_STATES[t])
+    if (T_STATES[t])
       ready_t++;
   return ready_t;
 }
@@ -53,8 +53,7 @@ void syncMS(int id) {
       pthread_cond_wait(&MISO_CV, &MTX);
       ready_t = nReady();  // Update number of ready threads
     }
-  }
-  else {  // Slave's critical section
+  } else {  // Slave's critical section
     T_STATES[id] = true;  // Slave just finished computing
     ready_t = nReady();
     if (ready_t == TOT_THREADS) {  // When everyone is ready signal master
@@ -64,7 +63,7 @@ void syncMS(int id) {
         for (int x = 0; x < UNIV_SIZE; x++)
           UNIV[y][x] = TEMP_UNIV[y][x];
     }
-    while(T_STATES[id])  // Until unleashed
+    while (T_STATES[id])  // Until unleashed
       pthread_cond_wait(&MOSI_CV, &MTX);  // Wait to be unleashed
   }
   pthread_mutex_unlock(&MTX);
@@ -142,9 +141,6 @@ void tick(int x_from, int x_to, int y_from, int y_to) {
   for (int y = y_from; y < y_to; y++)
     for (int x = x_from; x < x_to; x++) {
       int n_f = friends(x, y);
-      //if(n_f > 0)
-      //  printf("%i, %i has %i friends\n", x, y, n_f);
-      // Update cell's status in the new universe
       TEMP_UNIV[y][x] = n_f == 3 || (n_f == 2 && UNIV[y][x] == '1') ? '1' : '0';
     }
 }
@@ -163,7 +159,7 @@ void initUniv() {
 
   // Read file line by line copying its content into univ
   while ((c_read = getline(&l, &l_size, f)) != -1) {
-    c_read--; // Ignore delimiter
+    c_read--;  // Ignore delimiter
     if (c_read > UNIV_SIZE)
       logErr2("Error: line too long in 'universe.txt'.\n", EIO);
     if (c_read < UNIV_SIZE)
@@ -196,9 +192,8 @@ void *slave(void *a) {
   if (args->id == TOT_THREADS - 1)
     x_to = UNIV_SIZE;
   while (true) {
-    syncMS(args->id); // Sync
+    syncMS(args->id);  // Sync
     tick(x_from, x_to, 0, UNIV_SIZE);
-    //printf("Thread %i renders from %i to %i\n", args->id, x_from, x_to);
   }
 }
 
@@ -220,17 +215,17 @@ void gol() {
     // Init args and spawn thread
     a_ptr->id = t_id;
     T_STATES[t_id] = true;
-    if(err = pthread_create(&t_arr[t_id], NULL, slave, (void *)a_ptr))
+    if (err = pthread_create(&t_arr[t_id], NULL, slave, (void *)a_ptr))
       logErr2("Error: unable to create thread.\n", err);
     a_ptr++;
   }
 
   char temp[5];
   // Start game loop
-  while(true) {
+  while (true) {
     usleep(8000);
     show();
-    syncMS(-1); // Sync
+    syncMS(-1);  // Sync
   }
 }
 
@@ -255,11 +250,11 @@ int main(int c, char **v) {
     logErr2("Error: size and n_threads must be > 0.\n", EINVAL);
 
   // Initialize mutex and condition variable objects
-  if(pthread_mutex_init(&MTX, NULL) != 0)
+  if (pthread_mutex_init(&MTX, NULL) != 0)
     logErr1("Error: unable to initialize mutex");
-  if(pthread_cond_init (&MOSI_CV, NULL) != 0)
+  if (pthread_cond_init (&MOSI_CV, NULL) != 0)
     logErr1("Error: unable to initialize condition variable");
-  if(pthread_cond_init (&MISO_CV, NULL) != 0)
+  if (pthread_cond_init (&MISO_CV, NULL) != 0)
     logErr1("Error: unable to initialize condition variable");
 
   UNIV_SIZE = s;
