@@ -14,7 +14,7 @@ pthread_mutex_t MTX;         // Mutex for n_ready's critical sections
 pthread_cond_t  MOSI_CV;     // Condition variable master->slave
 pthread_cond_t  MISO_CV;     // Condition variable slave->master
 int UNIV_SIZE;               // Universe's size
-int TOT_THREADS = 1;         // Number of threads, default to 4
+int TOT_THREADS = 4;         // Number of threads, default to 4
 bool* T_STATES;              // Array containing threads' status
 char UNIV[1000][1000];       // 2D Matrix representing the universe
 char TEMP_UNIV[1000][1000];  // Temporary universe for holding next frame
