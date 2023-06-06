@@ -51,9 +51,3 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
-
-# Autocomplete
-tags
-
-# Misc
-universe.txt
